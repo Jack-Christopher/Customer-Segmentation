@@ -14,8 +14,10 @@ def index():
 
 @app.route('/partners', methods=['GET'])
 def query():
-    query = "SELECT * FROM res_partner"
+    query = "SELECT create_date, name, contact_name, country_id, expected_revenue, probability FROM crm_lead"
+
     df = proc.get(query)
+    print(df)
     return df.to_json(orient='records')
 
 
