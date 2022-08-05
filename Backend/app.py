@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file
-import utils.database as db
-import utils.processing as proc
+import segmentation.database as db
+import segmentation.processing as proc
 
 app = Flask(__name__)
 app.secret_key = 'very-secret-key'
