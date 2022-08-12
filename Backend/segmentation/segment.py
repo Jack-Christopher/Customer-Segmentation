@@ -35,17 +35,13 @@ def cluster(df):
 
 
 def leads():
-    dataset = get( "SELECT create_date, name, contact_name, country_id, expected_revenue, probability FROM crm_lead")
+    dataset = get( "SELECT create_date, name, contact_name, country_id, expected_revenue, email_from,probability FROM crm_lead")
     # dataset = get( "SELECT country_id, expected_revenue, probability FROM crm_lead")
 
     dataset['probability'] = dataset['probability'].fillna(dataset['probability'].mean())
     dataset['contact_name'] = dataset['contact_name'].fillna("Luis Sante")
     dataset['expected_revenue'] = dataset['expected_revenue'].fillna(0)
     dataset['expected_revenue'] = dataset['expected_revenue'].map(lambda x: x if x != 0 else x + dataset['expected_revenue'].mean())
-    # using for loop
-    # for i in range(len(dataset['expected_revenue'])):
-    #     if(dataset['expected_revenue'][i] == 0):
-    #         dataset['expected_revenue'][i] = dataset['expected_revenue'][i] + dataset['probability'].mean()
 
     # using map to replace 0 with mean of probability
     
@@ -60,14 +56,15 @@ def leads():
     standard = StandardScaler()
     new_data['country_id'] = standard.fit_transform(new_data[['country_id']])
     new_data['expected_revenue'] = standard.fit_transform(new_data[['expected_revenue']])
-    new_data['probability'] = standard.fit_transform(new_data[['probability']])
-
-    print(new_data)
+    #new_data['probability'] = standard.fit_transform(new_data[['probability']])
 
     dataset['cluster'], n_clusters = cluster(new_data[['country_id', 'expected_revenue']])
     dataset = dataset.sort_values(by="cluster")
+    dataset = dataset.reset_index(drop=True)
+
+    #print(dataset.isnull().sum())
 
     return dataset, n_clusters
 
-df, clus = leads()
-#print(df)
+df,c = leads()
+print(df)
