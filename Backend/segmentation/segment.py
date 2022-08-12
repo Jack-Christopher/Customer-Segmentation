@@ -3,8 +3,8 @@ import pandas as pd
 import pandas.io.sql as psql
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-import segmentation.database as db
-
+from sklearn.preprocessing import StandardScaler
+import database as db
 
 def get(query):
     connection = db.connect()
@@ -41,17 +41,33 @@ def leads():
     dataset['probability'] = dataset['probability'].fillna(dataset['probability'].mean())
     dataset['contact_name'] = dataset['contact_name'].fillna("Luis Sante")
     dataset['expected_revenue'] = dataset['expected_revenue'].fillna(0)
+    dataset['expected_revenue'] = dataset['expected_revenue'].map(lambda x: x if x != 0 else x + dataset['expected_revenue'].mean())
     # using for loop
     # for i in range(len(dataset['expected_revenue'])):
     #     if(dataset['expected_revenue'][i] == 0):
     #         dataset['expected_revenue'][i] = dataset['expected_revenue'][i] + dataset['probability'].mean()
 
     # using map to replace 0 with mean of probability
-    dataset['expected_revenue'] = dataset['expected_revenue'].map(lambda x: x if x != 0 else x + dataset['probability'].mean())
+    
+    new_data = {
+        'country_id' : dataset['country_id'],
+        'expected_revenue' : dataset['expected_revenue'],
+        'probability' : dataset['probability']
+    }
 
-    dataset['cluster'], n_clusters = cluster(dataset[['country_id', 'expected_revenue', 'probability']])
+    new_data = pd.DataFrame(new_data)
+
+    standard = StandardScaler()
+    new_data['country_id'] = standard.fit_transform(new_data[['country_id']])
+    new_data['expected_revenue'] = standard.fit_transform(new_data[['expected_revenue']])
+    new_data['probability'] = standard.fit_transform(new_data[['probability']])
+
+    print(new_data)
+
+    dataset['cluster'], n_clusters = cluster(new_data[['country_id', 'expected_revenue']])
+    dataset = dataset.sort_values(by="cluster")
 
     return dataset, n_clusters
 
-
-
+df, clus = leads()
+#print(df)
