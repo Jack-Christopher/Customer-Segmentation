@@ -14,15 +14,20 @@ def index():
 
 
 @app.route('/partners', methods=['GET'])
-def query():
-    query = "SELECT create_date, name, contact_name, country_id, expected_revenue, probability FROM crm_lead"
+def partners():
+    query = "SELECT name, credit_limit, country_id FROM res_partner"
     df = seg.get(query)
     return df.to_json(orient='records')
 
+@app.route('/leads', methods=['GET'])
+def leads():
+    query = "SELECT name, priority, country_id, expected_revenue, probability, date_open, date_closed FROM crm_lead"
+    df = seg.get(query)
+    return df.to_json(orient='records')
 
 @app.route('/segmentation', methods=['GET'])
 def segmentation():
-    df, k = seg.leads()
+    df, k = seg.segment()
     data = df.to_json(orient='records')
     total = {'n_clusters': k, 'data': data}
     # convert to json
