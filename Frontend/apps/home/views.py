@@ -10,7 +10,7 @@ from django.template import loader
 from django.urls import reverse
 
 from requests import get
-
+from base64 import b64encode
 
 @login_required(login_url="/login/")
 def index(request):
@@ -21,6 +21,10 @@ def index(request):
 
     history = get('http://127.0.0.1:5000/history')
     context['history'] = history.json()
+
+    img = get('http://127.0.0.1:5000/plot')
+    image = b64encode(img.content).decode('ascii')
+    context['image'] = image
     
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
