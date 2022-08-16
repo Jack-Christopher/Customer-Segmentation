@@ -9,11 +9,19 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
 
+from requests import get
+
 
 @login_required(login_url="/login/")
 def index(request):
     context = {'segment': 'index'}
+    
+    metrics = get('http://127.0.0.1:5000/metrics')
+    context['metrics'] = metrics.json()
 
+    history = get('http://127.0.0.1:5000/history')
+    context['history'] = history.json()
+    
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
 
@@ -42,3 +50,18 @@ def pages(request):
     except:
         html_template = loader.get_template('home/page-500.html')
         return HttpResponse(html_template.render(context, request))
+
+
+
+@login_required(login_url="/login/")
+def tables(request):
+    context = {'segment': 'tables'}
+
+    response = get('http://127.0.0.1:5000/partners')
+    context['partners'] = response.json()
+
+    response = get('http://127.0.0.1:5000/leads')
+    context['leads'] = response.json()
+
+    html_template = loader.get_template('home/tables.html')
+    return HttpResponse(html_template.render(context, request))
