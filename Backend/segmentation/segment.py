@@ -4,6 +4,10 @@ import pandas.io.sql as psql
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from datetime import datetime
+import matplotlib.pyplot as plt 
+import matplotlib.cm as cm
 import database as db
 
 def get(query):
@@ -15,8 +19,8 @@ def get(query):
 # silhoutte method
 def silhoutte(df, n_clusters):
     scores = []
-    for k in range(2, n_clusters + 1):
-        kmeans = KMeans(n_clusters=k, random_state=0).fit(df)
+    for k in range(2, n_clusters):
+        kmeans = KMeans(n_clusters=k, init='k-means++', random_state=0).fit(df)
         labels = kmeans.labels_
         score = silhouette_score(df, labels)
         scores.append(score)
@@ -28,8 +32,8 @@ def silhoutte(df, n_clusters):
 
 
 def cluster(df):
-    n_clusters = silhoutte(df, 10)
-    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(df)
+    n_clusters = silhoutte(df, 5)
+    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', random_state=0).fit(df)
     labels = kmeans.labels_
     return labels, n_clusters
 
@@ -39,6 +43,7 @@ def segment():
 
     # rename id column to partner_id
     partners.rename(columns={'id': 'partner_id'}, inplace=True)
+    partners['credit_limit'] = partners['credit_limit'].fillna(100000)
 
     standard = StandardScaler()    
     partners['credit_limit'] = standard.fit_transform(partners[['credit_limit']])
@@ -47,16 +52,22 @@ def segment():
     # encode function to numeric
     partners['function'] = partners['function'].astype('category')
     partners['function'] = partners['function'].cat.codes
+    partners['country_id'] = partners['country_id'].fillna(100)
 
+    #print(partners.isnull().sum())
 
 
     leads = get( "SELECT priority, expected_revenue, date_open, date_closed, probability, partner_id FROM crm_lead")
 
+    leads['date_open'] = leads['date_open'].fillna("2015-07-14")
+    leads['date_closed'] = leads['date_closed'].fillna("2015-10-10")
     leads['priority'] = leads['priority'].fillna(leads['priority'].mode()[0])    
     leads['expected_revenue'] = leads['expected_revenue'].fillna(0)
+
     leads['expected_revenue'] = leads['expected_revenue'].map(lambda x: x if x != 0 else x + leads['expected_revenue'].mean())
     # new column with date_closed - date_open
-    leads['date_diff'] = leads['date_closed'] - leads['date_open']
+    diff = pd.to_datetime(leads['date_closed']) - pd.to_datetime(leads['date_open'])
+    leads['date_diff'] = diff
     leads['date_diff'] = leads['date_diff'].dt.days
     leads['probability'] = leads['probability'].fillna(leads['probability'].mean())
 
@@ -70,13 +81,14 @@ def segment():
     # merge 
     partners = pd.merge(partners, leads, on='partner_id')
 
+    #print(leads.isnull().sum())
+
     #########################
     ###      Cluster      ###
     #########################
     partners['cluster'], n_clusters = cluster(partners[['country_id', 'credit_limit', 'function']])
     partners = partners.sort_values(by="cluster")
     partners = partners.reset_index(drop=True)
-
     # round values
     partners['credit_limit'] = partners['credit_limit'].round(2)
     partners['expected_revenue_avg'] = partners['expected_revenue_avg'].round(2)
@@ -90,5 +102,44 @@ def segment():
 
     return partners, n_clusters
 
-# df,c = segment()
-# print(df)
+def plot_clusters():
+    
+    dataframe, n_clusters = segment() 
+    columns_ = ['country_id', 'credit_limit', 'function']
+
+    x = dataframe.loc[:, columns_]
+    reduction = PCA(n_components=2)
+    reduction_clusters = reduction.fit_transform(x) 
+
+    ploteo = pd.DataFrame(data = reduction_clusters, 
+                                columns = ['X', 'Y'])
+    ploteo['cluster'] = dataframe['cluster'] 
+    
+
+    fig = plt.figure(figsize = (8,8))
+    ax = fig.add_subplot(1,1,1) 
+    ax.set_xlabel('X', fontsize = 15)
+    ax.set_ylabel('Y', fontsize = 15)
+    ax.set_title('Customer Segmentation', fontsize = 20)
+    
+    targets = []
+    for i in range(n_clusters):
+        targets.append(i)
+        
+    colors = cm.nipy_spectral(ploteo['cluster'].astype(float) / n_clusters)
+    #colors=[ 'r', 'g' , 'b']
+    for target, color in zip(targets,colors):
+        indicesToKeep = ploteo['cluster'] == target
+
+        ax.scatter(ploteo.loc[indicesToKeep, 'X'], 
+                    ploteo.loc[indicesToKeep, 'Y'], 
+                    c = color,
+                    s = 50)
+
+    ax.legend(targets)
+    ax.grid()
+    plt.savefig("Clustering.png")
+
+
+df,c = segment()
+print(len(df))
