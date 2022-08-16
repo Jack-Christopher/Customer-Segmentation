@@ -8,10 +8,14 @@ from datetime import datetime, timedelta
 def delete_all():
     connection = db.connect()
     cursor = connection.cursor()
+
+    cursor.execute("ALTER TABLE res_company DROP CONSTRAINT res_company_partner_id_fkey")
+    cursor.execute("ALTER TABLE res_users DROP CONSTRAINT res_users_partner_id_fkey")
     cursor.execute("DELETE FROM crm_lead")
     cursor.execute("DELETE FROM res_partner")
     cursor.execute("ALTER SEQUENCE crm_lead_id_seq RESTART WITH 1")
     cursor.execute("ALTER SEQUENCE res_partner_id_seq RESTART WITH 1")
+
     connection.commit()
     connection.close()
 
