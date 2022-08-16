@@ -97,12 +97,17 @@ def last_year():
 
 @app.route('/segmentation', methods=['GET'])
 def segmentation():
-    df, k = seg.segment()
+    df, k, centers = seg.segment()
     data = df.to_json(orient='records')
-    total = {'n_clusters': k, 'data': data}
+    total = {'n_clusters': k, 'centers': centers, 'data': data}
     # convert to json
     return str(total)
 
+
+@app.route('/plot', methods=['GET'])
+def plot():
+    seg.plot_clusters()
+    return send_file('static/img/Clustering.png', mimetype='image/png')
 
 if __name__ == '__main__':
    app.run(debug = True)

@@ -104,6 +104,8 @@ def segment():
     return partners, n_clusters, centers
 
 def plot_clusters():
+
+    print("Plotting clusters...")
     
     dataframe, n_clusters, centers = segment() 
     columns_ = ['country_id', 'credit_limit', 'function']
@@ -144,9 +146,11 @@ def plot_clusters():
     ax.legend(targets)
     ax.grid()
 
-    plt.savefig("Clustering.png")
+    plt.savefig("static/img/Clustering.png")
+
+    print("Clustering plot saved")
 
 
-dataframe, nr_clusters , centers = segment()
-plot_clusters()
-print(dataframe)
+# dataframe, nr_clusters , centers = segment()
+# plot_clusters()
+# print(dataframe)
