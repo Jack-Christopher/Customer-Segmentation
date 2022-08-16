@@ -822,14 +822,28 @@ if($map.length) {
 // Bars chart
 //
 
-var BarsChart = (function() {
+var BarsChart = (async function() {
 
 	//
 	// Variables
 	//
 
 	var $chart = $('#chart-bars');
-
+    // api call to get data
+    var data = await $.getJSON('http://127.0.0.1:5000/history');
+    var data_length = data.length;
+    // list of 'labels'
+    var label_list = [];
+    for (var i = 0; i < data_length; i++) {
+        label_list.push(data[i].year);
+    }
+    // list of 'data'
+    var data_list = [];
+    for (var i = 0; i < data_length; i++) {
+        data_list.push(data[i].date_open);
+    }
+    // console.log(label_list);
+    // console.log(data_list);
 
 	//
 	// Methods
@@ -842,10 +856,10 @@ var BarsChart = (function() {
 		var ordersChart = new Chart($chart, {
 			type: 'bar',
 			data: {
-				labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+				labels: label_list,
 				datasets: [{
-					label: 'Sales',
-					data: [25, 20, 30, 22, 17, 29]
+					label: 'Leads',
+					data: data_list,
 				}]
 			}
 		});
@@ -868,12 +882,23 @@ var BarsChart = (function() {
 // Sales chart
 //
 
-var SalesChart = (function() {
+var SalesChart = (async function() {
 
   // Variables
 
   var $chart = $('#chart-sales-dark');
-
+  // api call to get data
+  var data = await $.getJSON('http://127.0.0.1:5000/last_year');
+  var data_length = data.length;
+  // list of 'labels'
+  var label_list = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  // list of 'data'
+  var data_list = [];
+  for (var i = 0; i < data_length; i++) {
+    data_list.push(data[i].expected_revenue);
+  }
+  console.log(label_list);
+  console.log(data_list);
 
   // Methods
 
@@ -909,17 +934,18 @@ var SalesChart = (function() {
                 content += '<span class="popover-body-label mr-auto">' + label + '</span>';
               }
 
-              content += '<span class="popover-body-value">$' + yLabel + 'k</span>';
+            //   content += '<span class="popover-body-value">$' + yLabel + 'k</span>';
+            content += "S/. " + yLabel;
               return content;
             }
           }
         }
       },
       data: {
-        labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        labels: label_list,
         datasets: [{
           label: 'Performance',
-          data: [0, 20, 10, 30, 15, 40, 20, 60, 60]
+          data: data_list,
         }]
       }
     });
