@@ -4,7 +4,7 @@ import pandas.io.sql as psql
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
-import segmentation.database as db
+import database as db
 
 def get(query):
     connection = db.connect()

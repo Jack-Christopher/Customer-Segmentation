@@ -1,7 +1,10 @@
+import sys
+sys.path.insert(0, 'segmentation')
+
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS, cross_origin
-import segmentation.database as db
-import segmentation.segment as seg
+import database as db
+import segment as seg
 import json
 from datetime import datetime
 
