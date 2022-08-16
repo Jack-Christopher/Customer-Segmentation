@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from datetime import datetime
 import matplotlib.pyplot as plt 
-import matplotlib.cm as cm
+#import seaborn as sns
 import database as db
 
 def get(query):
@@ -35,7 +35,8 @@ def cluster(df):
     n_clusters = silhoutte(df, 5)
     kmeans = KMeans(n_clusters=n_clusters, init='k-means++', random_state=0).fit(df)
     labels = kmeans.labels_
-    return labels, n_clusters
+    centers = kmeans.cluster_centers_
+    return labels, n_clusters, centers
 
 
 def segment():
@@ -86,7 +87,7 @@ def segment():
     #########################
     ###      Cluster      ###
     #########################
-    partners['cluster'], n_clusters = cluster(partners[['country_id', 'credit_limit', 'function']])
+    partners['cluster'], n_clusters, centers = cluster(partners[['country_id', 'credit_limit', 'function']])
     partners = partners.sort_values(by="cluster")
     partners = partners.reset_index(drop=True)
     # round values
@@ -100,11 +101,11 @@ def segment():
     # delete partner_id column
     partners.drop(columns=['partner_id'], inplace=True)
 
-    return partners, n_clusters
+    return partners, n_clusters, centers
 
 def plot_clusters():
     
-    dataframe, n_clusters = segment() 
+    dataframe, n_clusters, centers = segment() 
     columns_ = ['country_id', 'credit_limit', 'function']
 
     x = dataframe.loc[:, columns_]
@@ -112,9 +113,14 @@ def plot_clusters():
     reduction_clusters = reduction.fit_transform(x) 
 
     ploteo = pd.DataFrame(data = reduction_clusters, 
-                                columns = ['X', 'Y'])
+                                columns = ['x', 'y'])
     ploteo['cluster'] = dataframe['cluster'] 
     
+
+    '''fig, ax = plt.subplots()
+    sns.scatterplot(x='x', y='y', data=ploteo.assign(cluster = ploteo['cluster']), hue='cluster', ax=ax)
+    ax.set(title='K-Means Clustering');
+    ax.scatter(centers[:, 0], centers[:, 1], marker='*', c='blue', s=100)'''
 
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
@@ -126,20 +132,21 @@ def plot_clusters():
     for i in range(n_clusters):
         targets.append(i)
         
-    colors = cm.nipy_spectral(ploteo['cluster'].astype(float) / n_clusters)
-    #colors=[ 'r', 'g' , 'b']
-    for target, color in zip(targets,colors):
+    for target in targets:
         indicesToKeep = ploteo['cluster'] == target
 
-        ax.scatter(ploteo.loc[indicesToKeep, 'X'], 
-                    ploteo.loc[indicesToKeep, 'Y'], 
-                    c = color,
+        ax.scatter(ploteo.loc[indicesToKeep, 'x'], 
+                    ploteo.loc[indicesToKeep, 'y'], 
+                    cmap = 'rainbow',
+                    edgecolors = 'k',
                     s = 50)
 
     ax.legend(targets)
     ax.grid()
+
     plt.savefig("Clustering.png")
 
 
-df,c = segment()
-print(len(df))
+dataframe, nr_clusters , centers = segment()
+plot_clusters()
+print(dataframe)
