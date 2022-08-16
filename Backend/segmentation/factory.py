@@ -68,10 +68,9 @@ def insert_random_data(n_partners, n_leads):
 
         country_id = data_partners[partner_id]['country_id']
 
-        date_open = datetime(random.randint(2015, 2020), random.randint(1, 12), random.randint(1, 28)).strftime('%Y-%m-%d %H:%M:%S')
-        date_closed = datetime.strptime(date_open, '%Y-%m-%d %H:%M:%S') + \
-            timedelta(seconds=random.randint(0, 60), minutes=random.randint(0, 60), hours=random.randint(0, 24), days=random.randint(0, 30), weeks=random.randint(0, 24))
-        date_closed = date_closed.strftime('%Y-%m-%d %H:%M:%S')
+        date_open = datetime(random.randint(2015, 2021), random.randint(1, 12), random.randint(1, 28)).strftime('%Y-%m-%d')
+        date_closed = datetime.strptime(date_open, '%Y-%m-%d') + timedelta(days=random.randint(0, 30), weeks=random.randint(0, 28))
+        date_closed = date_closed.strftime('%Y-%m-%d')
         
         cursor.execute("INSERT INTO crm_lead (name, partner_id, priority, stage_id, expected_revenue, type, probability, country_id, date_open, date_closed) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (lead_name, partner_id, priority, stage_id, expected_revenue, 'oportunity' , probability, country_id, date_open, date_closed))
